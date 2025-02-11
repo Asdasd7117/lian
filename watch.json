@@ -1,0 +1,8 @@
+{
+  "restart": {
+    "include": ["package.json", "app.js"]
+  },
+  "install": {
+    "include": ["package.json"]
+  }
+}
