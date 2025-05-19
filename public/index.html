@@ -1,44 +1,33 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>العملات المرشحة</title>
-  <style>
-    body { font-family: Arial; background: #111; color: #fff; text-align: center; padding: 30px; }
-    h1 { color: #0f0; }
-    ul { list-style: none; padding: 0; }
-    li { background: #222; margin: 10px auto; padding: 10px; border-radius: 8px; width: 80%; }
-  </style>
 </head>
-<body>
+<body style="font-family: sans-serif; text-align: center; margin-top: 30px;">
   <h1>العملات المرشحة للارتفاع</h1>
-  <ul id="coinsList">جارٍ التحميل...</ul>
+  <div id="coins"></div>
 
   <script>
     async function fetchCoins() {
-      try {
-        const res = await fetch("/coins");
-        const data = await res.json();
-        const list = document.getElementById("coinsList");
-        list.innerHTML = "";
+      const res = await fetch("/coins");
+      const data = await res.json();
+      const div = document.getElementById("coins");
+      div.innerHTML = "";
 
-        if (data.length === 0) {
-          list.innerHTML = "<li>لا توجد عملات حالياً</li>";
-          return;
-        }
-
-        data.forEach(coin => {
-          const li = document.createElement("li");
-          li.textContent = `${coin.symbol} - نسبة الشراء: ${coin.buyRatio}%`;
-          list.appendChild(li);
+      if (data.length === 0) {
+        div.innerHTML = "<p>لا توجد عملات مرشحة حاليًا</p>";
+      } else {
+        data.forEach(c => {
+          const el = document.createElement("div");
+          el.innerHTML = `<strong>${c.symbol}</strong> - نسبة الشراء: ${c.buyRatio}%`;
+          div.appendChild(el);
         });
-      } catch (e) {
-        document.getElementById("coinsList").innerHTML = "<li>حدث خطأ!</li>";
       }
     }
 
     fetchCoins();
-    setInterval(fetchCoins, 30000);
+    setInterval(fetchCoins, 60000); // تحديث كل دقيقة
   </script>
 </body>
 </html>
