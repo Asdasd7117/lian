@@ -1,14 +1,14 @@
-# scraper.py
 import requests
 import time
 import random
 import json
 
-# المفتاح مباشرة في الكود (غير موصى به للمشاركة العامة)
 API_KEY = "A7Z2YWJJBCHXKGQXKPOZLA5WUBQFNVHR70WES4WS0F3FISEONK6R6YR0RN1W4NW3NH0SQCS0SZASWNLC"
 TARGET_URL = "https://btc240.netlify.app/"
 
-while True:  # حلقة مستمرة لتشغيل السكربت
+print("بدء تشغيل السكربت كمهمة خلفية...")
+
+while True:
     for index in range(1, 21):
         wait_time = random.randint(30, 60)
         print(f"🚀 إرسال زيارة رقم {index} - مدة الانتظار: {wait_time} ثانية")
@@ -53,4 +53,4 @@ while True:  # حلقة مستمرة لتشغيل السكربت
         time.sleep(random.uniform(90, 180))
 
     print("✅ تم تنفيذ 20 زيارة — الانتظار قبل الدورة التالية...")
-    time.sleep(3600)  # انتظار ساعة قبل البدء من جديد
+    time.sleep(3600)
