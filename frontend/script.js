@@ -1,5 +1,5 @@
 // رابط السيرفر على Render
-const SERVER_URL = "https://https://two0000-lxps.onrender.com/"; 
+const SERVER_URL = "https://two0000-lxps.onrender.com/"; 
 const socket = io(SERVER_URL);
 
 // عناصر HTML
