@@ -1,20 +1,19 @@
 // رابط السيرفر على Render
-const SERVER_URL = "https://two0000-lxps.onrender.com/"; 
+const SERVER_URL = "https://two0000-lxps.onrender.com";
 const socket = io(SERVER_URL);
 
 // عناصر HTML
 const createBtn = document.getElementById("createBtn");
 const linkDiv = document.getElementById("linkDiv");
 const localVideo = document.getElementById("localVideo");
-const remoteContainer = document.getElementById("remoteContainer");
-const msgInput = document.getElementById("msgInput");
-const sendBtn = document.getElementById("sendBtn");
-const messagesDiv = document.getElementById("messages");
+const remoteVideo = document.getElementById("remoteVideo");
+const endCallBtn = document.getElementById("endCall");
 
 let localStream;
-const pcs = {}; // تخزين الـ PeerConnections
-const ICE_CONFIG = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+let pc;
 let roomId, token, selfId;
+
+const ICE_CONFIG = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 // ---------------------- إنشاء الغرفة ----------------------
 if (createBtn) {
@@ -31,7 +30,7 @@ if (createBtn) {
 // ---------------------- بدء الكاميرا ----------------------
 async function startLocal() {
   localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  if (localVideo) localVideo.srcObject = localStream;
+  localVideo.srcObject = localStream;
 }
 
 // ---------------------- الانضمام للغرفة ----------------------
@@ -44,22 +43,12 @@ async function joinRoom(roomIdParam, tokenParam) {
 
 // ---------------------- إنشاء PeerConnection ----------------------
 function createPC(remoteId) {
-  if (pcs[remoteId]) return pcs[remoteId];
-  const pc = new RTCPeerConnection(ICE_CONFIG);
-  pcs[remoteId] = pc;
+  pc = new RTCPeerConnection(ICE_CONFIG);
 
   localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
   pc.ontrack = e => {
-    let vid = document.getElementById("remote_" + remoteId);
-    if (!vid) {
-      vid = document.createElement("video");
-      vid.id = "remote_" + remoteId;
-      vid.autoplay = true;
-      vid.playsInline = true;
-      remoteContainer.appendChild(vid);
-    }
-    vid.srcObject = e.streams[0];
+    if (remoteVideo) remoteVideo.srcObject = e.streams[0];
   };
 
   pc.onicecandidate = ev => {
@@ -81,7 +70,7 @@ socket.on("joined", async ({ selfId: id, others }) => {
 });
 
 socket.on("user-joined", async otherId => {
-  const pc = createPC(otherId);
+  createPC(otherId);
 });
 
 socket.on("offer", async ({ from, sdp }) => {
@@ -93,45 +82,31 @@ socket.on("offer", async ({ from, sdp }) => {
 });
 
 socket.on("answer", async ({ from, sdp }) => {
-  const pc = pcs[from];
-  if (!pc) return;
-  await pc.setRemoteDescription(sdp);
+  if (pc) await pc.setRemoteDescription(sdp);
 });
 
 socket.on("candidate", ({ from, candidate }) => {
-  const pc = pcs[from];
-  if (!pc) return;
-  pc.addIceCandidate(candidate).catch(console.error);
+  if (pc) pc.addIceCandidate(candidate).catch(console.error);
 });
 
 socket.on("room-error", msg => alert(msg));
 
-socket.on("user-left", id => {
-  const vid = document.getElementById("remote_" + id);
-  if (vid) vid.remove();
-  delete pcs[id];
+socket.on("user-left", () => {
+  if (remoteVideo) remoteVideo.srcObject = null;
+  if (pc) pc.close();
 });
 
-// ---------------------- الدردشة ----------------------
-if (sendBtn) {
-  sendBtn.onclick = () => {
-    const text = msgInput.value.trim();
-    if (!text) return;
-    socket.emit("chat", { roomId, text, name: "أنت" });
-    addMessage("أنت: " + text);
-    msgInput.value = "";
+// ---------------------- إنهاء المكالمة ----------------------
+if (endCallBtn) {
+  endCallBtn.onclick = () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    if (pc) pc.close();
+    socket.emit("leave-room", { roomId, selfId });
+    alert("تم إنهاء المكالمة");
+    window.location.href = "/"; // يرجع للصفحة الرئيسية
   };
-}
-
-socket.on("chat", ({ from, text, name }) => {
-  addMessage(`${name || from}: ${text}`);
-});
-
-function addMessage(msg) {
-  const div = document.createElement("div");
-  div.textContent = msg;
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
 // ---------------------- إذا كان الرابط فيه room و token ----------------------
