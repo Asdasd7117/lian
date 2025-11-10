@@ -1,4 +1,4 @@
-name: my_flutter_app
+name: lian
 description: تطبيق Flutter بسيط يعرض أهلا وسهلا
 publish_to: 'none' # يمنع نشر الباكيج على pub.dev
 version: 1.0.0+1
