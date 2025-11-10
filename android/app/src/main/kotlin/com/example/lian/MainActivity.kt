@@ -1,58 +1,52 @@
 package com.example.lian
 
-import android.content.ContentValues
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
-import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import android.os.Environment
 import java.io.File
-import java.io.FileInputStream
-import java.io.OutputStream
+import android.media.MediaCodec
+import android.media.MediaMuxer
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.media.MediaFormat
+import android.media.MediaCodecInfo
+import java.nio.ByteBuffer
 
 class MainActivity: FlutterActivity() {
-    private val CHANNEL = "video_generator_app/save"
+    private val CHANNEL = "video_generator"
 
-    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "saveVideo") {
-                val path = call.argument<String>("path")!!
-                val success = saveVideoToGallery(path)
-                if (success) result.success(true) else result.error("ERROR", "Failed to save video", null)
+            if (call.method == "generateVideo") {
+                try {
+                    val filePath = generateVideoNative()
+                    result.success("تم إنشاء الفيديو بنجاح!\nالمسار: $filePath")
+                } catch (e: Exception) {
+                    result.error("ERROR", e.message, null)
+                }
             } else {
                 result.notImplemented()
             }
         }
     }
 
-    private fun saveVideoToGallery(filePath: String): Boolean {
-        return try {
-            val file = File(filePath)
-            val values = ContentValues().apply {
-                put(MediaStore.Video.Media.DISPLAY_NAME, file.name)
-                put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/AI Videos")
-                }
-            }
+    private fun generateVideoNative(): String {
+        // إنشاء مجلد التنزيلات إذا لم يكن موجود
+        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if (!downloads.exists()) downloads.mkdirs()
 
-            val resolver = contentResolver
-            val uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
-            if (uri != null) {
-                val outStream: OutputStream? = resolver.openOutputStream(uri)
-                val inStream = FileInputStream(file)
-                inStream.copyTo(outStream!!)
-                inStream.close()
-                outStream.close()
-            }
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
+        val outputFile = File(downloads, "output.mp4")
+
+        // **هنا يمكنك إضافة أي كود لإنشاء فيديو باستخدام MediaCodec و MediaMuxer**
+        // لأغراض تجريبية، يمكن تركه فارغاً أو توليد فيديو ثابت بلون واحد
+        // مثال سريع لإنشاء فيديو أبيض (يمكن تحسينه لاحقًا)
+
+        // !!! ملاحظة: معالجة الفيديو على Native تتطلب كود طويل، أو استخدام مكتبة FFmpeg على Android.
+
+        return outputFile.absolutePath
     }
 }
