@@ -1,6 +1,6 @@
 name: lian
-description: A Flutter app using FFmpeg and modern packages.
-publish_to: "none" # يمنع النشر إلى pub.dev
+description: A Flutter app using FFmpeg and other modern packages.
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -10,8 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # مكتبة FFmpeg مدعومة رسمياً من Maven Central
-  ffmpeg_kit_flutter: ^6.0.3
+  # نسخة قديمة مستقرة بدون GitHub auth
+  ffmpeg_kit_flutter_min_gpl: 6.0.3
 
   # مكتبات أساسية
   cupertino_icons: ^1.0.8
