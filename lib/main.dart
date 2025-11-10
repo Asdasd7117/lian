@@ -33,15 +33,29 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
   static const platform = MethodChannel('video_generator');
   bool _isProcessing = false;
   String _status = "اضغط على الزر لتوليد الفيديو";
+  final TextEditingController _descriptionController = TextEditingController();
 
   Future<void> _generateVideo() async {
+    final String description = _descriptionController.text.trim();
+
+    if (description.isEmpty) {
+      setState(() {
+        _status = "يرجى إدخال وصف للفيديو أولاً";
+      });
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
       _status = "جاري إنشاء الفيديو...";
     });
 
     try {
-      final String result = await platform.invokeMethod('generateVideo');
+      final String result = await platform.invokeMethod(
+        'generateVideo',
+        {'description': description}, // تمرير الوصف إلى الكود الأصلي
+      );
+
       setState(() {
         _status = result;
       });
@@ -69,6 +83,14 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              TextField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'أدخل وصف الفيديو',
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 _status,
                 textAlign: TextAlign.center,
