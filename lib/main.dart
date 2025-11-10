@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ffmpeg_kit_flutter_min_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart'; // ✅ التعديل الجديد على المكتبة
 
 void main() {
   runApp(const MyApp());
@@ -82,8 +82,7 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
               ElevatedButton(
                 onPressed: _isProcessing ? null : _generateVideo,
                 style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                   textStyle: const TextStyle(fontSize: 18),
                 ),
                 child: _isProcessing
