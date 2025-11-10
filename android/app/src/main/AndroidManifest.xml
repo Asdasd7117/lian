@@ -1,35 +1,33 @@
-package com.example.lian
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.lian">
 
-import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.plugin.common.MethodChannel
-import android.os.Environment
-import android.widget.Toast
-import java.io.File
+    <!-- صلاحيات التخزين -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
-class MainActivity: FlutterActivity() {
-    private val CHANNEL = "video_generator"
+    <application
+        android:label="lian"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="true"
+        android:theme="@style/LaunchTheme">
 
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine)
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "generateVideo") {
-                // مثال: إنشاء ملف فيديو فارغ باسم output.mp4
-                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val outputFile = File(downloadsDir, "output.mp4")
-                
-                try {
-                    if (!outputFile.exists()) {
-                        outputFile.createNewFile()
-                    }
-                    result.success("تم إنشاء الفيديو بنجاح! (مسار: ${outputFile.absolutePath})")
-                } catch (e: Exception) {
-                    result.error("ERROR", "حدث خطأ أثناء إنشاء الفيديو: ${e.message}", null)
-                }
-            } else {
-                result.notImplemented()
-            }
-        }
-    }
-}
+        </activity>
+
+    </application>
+
+</manifest>
