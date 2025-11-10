@@ -1,6 +1,6 @@
 name: lian
 description: A Flutter app using FFmpeg and other modern packages.
-publish_to: "none" # يمنع النشر إلى pub.dev
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -10,30 +10,25 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # مكتبة FFmpeg جديدة مدعومة رسميًا
-  ffmpeg_kit_flutter_min_gpl: ^6.0.3
+  # مكتبة FFmpeg (الإصدار الصالح والموجود)
+  ffmpeg_kit_flutter_min_gpl: ^6.0.2
 
   # مكتبات أساسية
   cupertino_icons: ^1.0.8
-  path_provider: ^2.1.2
+  path_provider: ^2.1.3
   permission_handler: ^11.4.0
-
-  # إذا تستخدم تخزين أو تحميل ملفات
   http: ^1.2.2
-
-  # إذا تستخدم state management
   provider: ^6.1.2
-
-  # أيقونات أو واجهات حديثة
   flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
+
+  # ✅ لا تترك مجلد "assets" فارغًا، أضف على الأقل ملف داخله
   assets:
-    - assets/
+    - assets/sample.txt
