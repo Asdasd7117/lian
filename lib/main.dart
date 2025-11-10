@@ -1,65 +1,71 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'dart:io';
 
 void main() {
-  runApp(MyImageApp());
+  runApp(VideoGeneratorApp());
 }
 
-class MyImageApp extends StatelessWidget {
+class VideoGeneratorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'رفع الصور',
-      home: ImageUploadScreen(),
+      home: VideoGeneratorPage(),
     );
   }
 }
 
-class ImageUploadScreen extends StatefulWidget {
+class VideoGeneratorPage extends StatefulWidget {
   @override
-  _ImageUploadScreenState createState() => _ImageUploadScreenState();
+  State<VideoGeneratorPage> createState() => _VideoGeneratorPageState();
 }
 
-class _ImageUploadScreenState extends State<ImageUploadScreen> {
-  File? _image;
-  final picker = ImagePicker();
+class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
+  final TextEditingController _desc = TextEditingController();
+  bool _loading = false;
 
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
+  Future<void> generateVideo(String text) async {
+    setState(() => _loading = true);
+    final dir = await getTemporaryDirectory();
+    final outputPath = '${dir.path}/video.mp4';
+
+    // هنا نولد فيديو بسيط من لون ونص فقط
+    final command =
+        '-f lavfi -i color=c=blue:s=640x360:d=5 -vf "drawtext=text=\'$text\':fontcolor=white:fontsize=24:x=(w-text_w)/2:y=(h-text_h)/2" -c:v libx264 -pix_fmt yuv420p $outputPath';
+
+    await FFmpegKit.execute(command);
+
+    await GallerySaver.saveVideo(outputPath);
+    setState(() => _loading = false);
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('تم حفظ الفيديو في الاستوديو ✅')));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('رفع الصور إلى الواجهة'),
-        centerTitle: true,
-      ),
-      body: Center(
+      appBar: AppBar(title: Text("إنشاء فيديو من وصف")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _image == null
-                ? Text('لم يتم اختيار صورة بعد')
-                : Image.file(_image!, height: 300),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: () => _pickImage(ImageSource.gallery),
-              icon: Icon(Icons.photo),
-              label: Text('اختيار من المعرض'),
+            TextField(
+              controller: _desc,
+              decoration: InputDecoration(labelText: 'اكتب وصف الفيديو'),
             ),
-            const SizedBox(height: 15),
-            ElevatedButton.icon(
-              onPressed: () => _pickImage(ImageSource.camera),
-              icon: Icon(Icons.camera_alt),
-              label: Text('التقاط صورة بالكاميرا'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _loading
+                  ? null
+                  : () => generateVideo(_desc.text.isEmpty
+                      ? "فيديو تجريبي"
+                      : _desc.text),
+              child: _loading
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text('إنشاء الفيديو'),
             ),
           ],
         ),
