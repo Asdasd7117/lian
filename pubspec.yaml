@@ -1,25 +1,26 @@
-name: my_flutter_app
-description: تطبيق Flutter بسيط يعرض أهلا وسهلا
-publish_to: 'none' # يمنع نشر الباكيج على pub.dev
+name: image_uploader
+description: تطبيق Flutter بسيط لرفع الصور وعرضها في الواجهة فقط بدون قاعدة بيانات.
+publish_to: 'none' # لا تنشر التطبيق على pub.dev
+
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.19.0 <4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.5
+  # مكتبة لاختيار الصور من المعرض أو الكاميرا
+  image_picker: ^1.1.1
+
+  # حزم Flutter الأساسية
+  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
-
-  assets:
-    # إذا أردت إضافة صور يمكنك إضافتها هنا
-    # - assets/images/
