@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 import 'dart:io';
 
 void main() {
@@ -29,16 +28,18 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
   bool _loading = false;
 
   Future<void> saveVideoToGallery(String path) async {
-    // طلب إذن الوصول للتخزين
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
-      await ImageGallerySaver.saveFile(path);
+    final mediaStore = MediaStore();
+    try {
+      await mediaStore.saveVideo(
+        entity: path,
+        albumName: "AI Videos", // اسم الألبوم الذي سيظهر في الاستوديو
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ تم حفظ الفيديو في الاستوديو')),
       );
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('⚠️ لم يتم منح إذن الوصول للتخزين')),
+        SnackBar(content: Text('❌ فشل حفظ الفيديو: $e')),
       );
     }
   }
@@ -46,9 +47,10 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
   Future<void> generateVideo(String text) async {
     setState(() => _loading = true);
     final dir = await getTemporaryDirectory();
-    final outputPath = '${dir.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+    final outputPath =
+        '${dir.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
-    // إنشاء فيديو بسيط من لون ونص فقط
+    // إنشاء فيديو بسيط بخلفية زرقاء مع النص الذي يكتبه المستخدم
     final command =
         '-f lavfi -i color=c=blue:s=640x360:d=5 -vf "drawtext=text=\'$text\':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=(h-text_h)/2" -c:v libx264 -pix_fmt yuv420p $outputPath';
 
@@ -96,7 +98,8 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
                         SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2)),
                         SizedBox(width: 10),
                         Text("جارٍ إنشاء الفيديو..."),
                       ],
