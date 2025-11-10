@@ -2,7 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        maven { url "https://jitpack.io" } // ✅ أضف هذا السطر المهم
+        maven(url = "https://jitpack.io") // ✅ إصلاح الصيغة
     }
 }
 
