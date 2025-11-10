@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart'; // ✅ التعديل الجديد على المكتبة
+import 'package:ffmpeg_kit_flutter_min_gpl/ffmpeg_kit.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,19 +42,28 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
       _status = "جاري إنشاء الفيديو...";
     });
 
+    // طلب إذن التخزين للأندرويد 13 فما فوق
+    if (Platform.isAndroid) {
+      await Permission.storage.request();
+    }
+
     try {
-      // الأمر المستخدم مع FFmpeg لإنشاء فيديو بسيط بلون واحد لمدة 5 ثوانٍ
+      // إنشاء مسار حفظ الفيديو في مجلد التنزيلات
+      final directory = await getExternalStorageDirectory();
+      final savePath = '${directory!.path}/output.mp4';
+
+      // أمر FFmpeg لإنشاء فيديو بسيط 5 ثوانٍ مع نص
       final command =
-          '-f lavfi -i color=c=blue:s=640x480:d=5 -vf "drawtext=text=\'Hello Flutter\':x=(w-text_w)/2:y=(h-text_h)/2:fontcolor=white:fontsize=40" /storage/emulated/0/Download/output.mp4';
+          '-f lavfi -i color=c=blue:s=640x480:d=5 -vf "drawtext=text=\'Hello Flutter\':x=(w-text_w)/2:y=(h-text_h)/2:fontcolor=white:fontsize=40" $savePath';
 
       await FFmpegKit.execute(command);
 
       setState(() {
-        _status = "تم إنشاء الفيديو بنجاح! (تم حفظه في مجلد التنزيلات)";
+        _status = "تم إنشاء الفيديو بنجاح!\nتم حفظه في:\n$savePath";
       });
     } catch (e) {
       setState(() {
-        _status = "حدث خطأ أثناء إنشاء الفيديو: $e";
+        _status = "حدث خطأ أثناء إنشاء الفيديو:\n$e";
       });
     }
 
