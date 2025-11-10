@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:media_store_plus/media_store_plus.dart';
 import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 
 void main() {
   runApp(VideoGeneratorApp());
@@ -27,19 +27,17 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
   final TextEditingController _desc = TextEditingController();
   bool _loading = false;
 
+  static const platform = MethodChannel('video_generator_app/save');
+
   Future<void> saveVideoToGallery(String path) async {
-    final mediaStore = MediaStore();
     try {
-      await mediaStore.saveVideo(
-        entity: path,
-        albumName: "AI Videos", // اسم الألبوم في الاستوديو
-      );
+      await platform.invokeMethod('saveVideo', {'path': path});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('✅ تم حفظ الفيديو في الاستوديو')),
       );
-    } catch (e) {
+    } on PlatformException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل حفظ الفيديو: $e')),
+        SnackBar(content: Text('❌ فشل الحفظ: ${e.message}')),
       );
     }
   }
@@ -50,7 +48,6 @@ class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
     final outputPath =
         '${dir.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
-    // إنشاء فيديو بخلفية زرقاء مع النص الذي يكتبه المستخدم
     final command =
         '-f lavfi -i color=c=blue:s=640x360:d=5 -vf "drawtext=text=\'$text\':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=(h-text_h)/2" -c:v libx264 -pix_fmt yuv420p $outputPath';
 
