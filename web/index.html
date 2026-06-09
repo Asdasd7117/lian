@@ -1,38 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="lian">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>lian</title>
-  <link rel="manifest" href="manifest.json">
+    <base href="$FLUTTER_BASE_HREF">
+    <meta charset="UTF-8">
+    <title>Video Editor</title>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.9/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+    <script src="flutter_bootstrap.js" async></script>
+    <script>
+        const { FFmpeg } = FFmpegWASM;
+        const ffmpeg = new FFmpeg();
+
+        // دالة المونتاج: تستقبل البايتات الخاصة بالفيديو والصوت والنص
+        async function processVideo(videoBytes, audioBytes, text) {
+            if (!ffmpeg.loaded) {
+                await ffmpeg.load({
+                    coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+                });
+            }
+
+            // كتابة الملفات في ذاكرة المتصفح
+            await ffmpeg.writeFile('input.mp4', videoBytes);
+            await ffmpeg.writeFile('audio.mp3', audioBytes);
+
+            // أمر المونتاج: دمج الصوت مع الفيديو + كتابة النص
+            await ffmpeg.exec([
+                '-i', 'input.mp4',
+                '-i', 'audio.mp3',
+                '-filter_complex', `[0:v]drawtext=text='${text}':x=(w-text_w)/2:y=h-50:fontsize=30:fontcolor=white[v];[0:a]volume=0.3[a0];[1:a]volume=1.0[a1];[a0][a1]amix=inputs=2:duration=first`,
+                '-map', '[v]',
+                '-map', '[a]',
+                '-c:v', 'libx264',
+                '-c:a', 'aac',
+                'output.mp4'
+            ]);
+
+            // قراءة النتيجة وتحميلها
+            const data = await ffmpeg.readFile('output.mp4');
+            const blob = new Blob([data.buffer], { type: 'video/mp4' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'edited_video.mp4';
+            link.click();
+            return "تم الإنتاج بنجاح";
+        }
+    </script>
 </body>
 </html>
