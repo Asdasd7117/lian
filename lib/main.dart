@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 void main() => runApp(const MaterialApp(home: VideoEditorScreen()));
 
 class ApiConfig {
-  static const String pexelsKey = "ضع_مفتاحك_هنا"; // ضع مفتاحك هنا
+  static const String pexelsKey = "1y1rQKXW16VqMqafrrTynioop03NY52ZGvoT75iGAEI31XtRQrZxGLF3"; 
 }
 
 class VideoEditorScreen extends StatefulWidget {
