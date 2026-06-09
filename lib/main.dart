@@ -1,118 +1,70 @@
+import 'dart:js' as js;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() => runApp(const MaterialApp(home: VideoEditorScreen()));
+
+class VideoEditorScreen extends StatefulWidget {
+  const VideoEditorScreen({super.key});
+  @override
+  State<VideoEditorScreen> createState() => _VideoEditorScreenState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _VideoEditorScreenState extends State<VideoEditorScreen> {
+  Uint8List? _videoBytes;
+  Uint8List? _audioBytes;
+  final TextEditingController _textController = TextEditingController();
+  String _status = "جاهز";
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Video Generator',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
-      home: const VideoGeneratorPage(),
-    );
+  Future<void> _pickVideo() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.video, withData: true);
+    if (result != null) {
+      setState(() => _videoBytes = result.files.first.bytes);
+    }
   }
-}
 
-class VideoGeneratorPage extends StatefulWidget {
-  const VideoGeneratorPage({super.key});
+  Future<void> _pickAudio() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.audio, withData: true);
+    if (result != null) {
+      setState(() => _audioBytes = result.files.first.bytes);
+    }
+  }
 
-  @override
-  State<VideoGeneratorPage> createState() => _VideoGeneratorPageState();
-}
-
-class _VideoGeneratorPageState extends State<VideoGeneratorPage> {
-  static const platform = MethodChannel('video_generator');
-  bool _isProcessing = false;
-  String _status = "اضغط على الزر لتوليد الفيديو";
-  final TextEditingController _descController = TextEditingController();
-
-  Future<void> _generateVideo() async {
-    // 🔹 طلب صلاحية الوصول قبل أي شيء
-    var status = await Permission.videos.request();
-
-    if (status.isDenied || status.isPermanentlyDenied) {
-      setState(() {
-        _status = "تم رفض صلاحية الوصول للتخزين!";
-      });
+  void _generate() {
+    if (_videoBytes == null || _audioBytes == null) {
+      setState(() => _status = "يرجى اختيار فيديو وملف صوتي أولاً!");
       return;
     }
+    
+    setState(() => _status = "جاري المعالجة (قد يستغرق وقتاً)...");
 
-    setState(() {
-      _isProcessing = true;
-      _status = "جاري إنشاء الفيديو...";
-    });
-
-    try {
-      // 🔹 تمرير النص المكتوب للوصف إلى الجانب الجافا
-      final String result = await platform.invokeMethod(
-        'generateVideo',
-        {"description": _descController.text},
-      );
-
-      setState(() {
-        _status = result;
-      });
-    } on PlatformException catch (e) {
-      setState(() {
-        _status = "حدث خطأ أثناء إنشاء الفيديو: ${e.message}";
-      });
-    }
-
-    setState(() {
-      _isProcessing = false;
+    // إرسال البيانات إلى JS
+    js.context.callMethod('processVideo', [
+      _videoBytes, 
+      _audioBytes, 
+      _textController.text
+    ]).then((result) {
+      setState(() => _status = "تم الإنتاج!");
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("مولد الفيديو"),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: _descController,
-                decoration: const InputDecoration(
-                  labelText: "أدخل وصف الفيديو",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _status,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isProcessing ? null : _generateVideo,
-                style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
-                child: _isProcessing
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("توليد الفيديو"),
-              ),
-            ],
-          ),
+      appBar: AppBar(title: const Text("محرر الفيديو المحلي")),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            ElevatedButton(onPressed: _pickVideo, child: const Text("اختر الفيديو")),
+            ElevatedButton(onPressed: _pickAudio, child: const Text("اختر ملف الصوت")),
+            TextField(controller: _textController, decoration: const InputDecoration(labelText: "اكتب النص على الفيديو")),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: _generate, child: const Text("إنتاج الفيديو")),
+            const SizedBox(height: 20),
+            Text(_status),
+          ],
         ),
       ),
     );
